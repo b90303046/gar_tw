@@ -9,7 +9,8 @@ warnings.filterwarnings("ignore")
 import pandas as pd
 import numpy as np
 
-from GAR import wb
+import GAR
+#from GAR import wb
 from GAR.globals import read_parameters_global, read_partition_groups, read_partition_groupsPLS, show_message, add_logsheet
 from .plot_partition import partition_plot
 from .partition_retro import partition_retro
@@ -30,7 +31,7 @@ def do_partition(debug=False):
     t0 = time.time()
 
     # Make sure a wb exists
-    if wb is None:
+    if GAR.wb is None:
         print('partition_main: wb is None')
         print('This may be due to not calling set_mock_caller_file')
         print('and setting the caller Workbook')
@@ -67,7 +68,9 @@ def do_partition(debug=False):
     message = 'Finished with partition in ' + tdiff + ' sec,\n'
     message += 'output is in sheets ' + ', '.join(sheets) 
     show_message(message,msgtype='info')
-    
+
+
+
 def prerun_partition(debug=False):
     '''
     Prerun function for step 1, partition.
@@ -88,7 +91,7 @@ def prerun_partition(debug=False):
     keys = ['freq', 'sdate', 'edate', 'method', 'pcutoff', 'method_growth', 'retropolate', 'sheet_partitions', 'sheet_loadings']
 
     # --------------------------
-    # Read in parameters
+    # Read in parameters, 這部分是將檔案讀至python的關鍵, 讀取Input_Parameters中B17:B25的欄位
     # --------------------------
     dict_input_partition = read_parameters_partition()
 
@@ -100,7 +103,7 @@ def prerun_partition(debug=False):
     # --------------------------
     # Read in global parameters
     # --------------------------
-    # (this also checks if values have changed since being initially set)
+    # (this also checks if values have changed since being initially set), in globals.py
     dict_global_params = read_parameters_global()
 
     # Add each key, val from dict_global_params to dict_input_partition
@@ -190,14 +193,14 @@ def read_parameters_partition():
     # Process each parameter in order
     for param in ['freq', 'sdate', 'edate', 'method', 'pcutoff', 'method_growth', 'retropolate', 'sheet_partitions', 'sheet_loadings']:
         cellpos = 'B' + str(pos)
-        dict_parameters_partition[param] = wb.sheets['Input_parameters'].range(cellpos).value
+        dict_parameters_partition[param] = GAR.wb.sheets['Input_parameters'].range(cellpos).value
         pos += 1
 
     return dict_parameters_partition
 
 def check_parameters_partition(dict_input_partition, keys):
     '''
-    Check the input parameters for partition.
+    Check the input parameters for partition. (部分工作表的名稱需確認)
     '''
 
     # Check that all keys exist
@@ -207,7 +210,7 @@ def check_parameters_partition(dict_input_partition, keys):
             show_message(message)
 
     # Get the sheets in the wb
-    sheetnames = [sheet.name for sheet in wb.sheets]
+    sheetnames = [sheet.name for sheet in GAR.wb.sheets]
 
     # These are the sheets that are used as input and never overwritten
     input_sheets = ['Readme', 'Input_parameters', 'Partition_groups', 'Data', 'Processing_Log']
@@ -286,14 +289,14 @@ def read_data_partition():
     '''
 
     # Get the sheets in the wb
-    sheetnames = [sheet.name for sheet in wb.sheets]
+    sheetnames = [sheet.name for sheet in GAR.wb.sheets]
     # Make sure that Data sheet exists
     if 'Data' not in sheetnames:
         message = 'Sheet named Data does not exist'
         show_message(message, halt=True)
 
-    # Read in the Data sheet as a df
-    df_partition = wb.sheets['Data'].range('A1').options(pd.DataFrame,index=False,expand='table').value
+    # Read in the Data sheet as a df, 在這裡讀取資料, 從data A1
+    df_partition = GAR.wb.sheets['Data'].range('A1').options(pd.DataFrame,index=False,expand='table').value
     colset=set()
     dupset=set()
     for e in df_partition.columns:
@@ -354,7 +357,7 @@ def check_data_partition(df_partition, dict_input_partition):
 
 def format_data_partition(df, startdate, enddate, interpolate_method='linear', ffill_limit=None, fill_warning=None, debug=False):
     '''
-    Fill missing values and latest values for partition data.
+    Fill missing values and latest values for partition data. # 處理缺失值
 
     Method to fill holes in the data will be specified with interpolate_method
     (defaults to linear interpolation), and number of ffill will be limited by
@@ -373,10 +376,10 @@ def format_data_partition(df, startdate, enddate, interpolate_method='linear', f
             print('Original Data had length of ' + str(original_length) + ' now is ' + str(len(df)))
 
     # Interpolate intermediate missing values
-    df = interpolate_missing_values(wb, df)
+    df = interpolate_missing_values(GAR.wb, df, True)
 
     # ffill latest values where necessary
-    df = ffill_values(wb, df)
+    df = ffill_values(GAR.wb, df, debug=True)
     
     return df
 
@@ -396,11 +399,11 @@ def interpolate_missing_values(wb, df, debug=False):
     if debug:
         print('Total of ' + str(len(df.columns)) + ' cols')
         print('_df before interpolate_missing_values:')
-        print(_df)
+        print(_df) #我覺得這樣寫不好, 直接用info比較好
 
     # Since df has dates before dict_input_partition['sdate'] sliced off,
     # we need an offset for the row number
-    daterange = wb.sheets['Data'].range('A1').expand('down').value # this is a list
+    daterange = GAR.wb.sheets['Data'].range('A1').expand('down').value # this is a list, you can check 
     # Find the index where _df.index[0] is
     try:
         offset = daterange.index(_df.index[0])
@@ -417,7 +420,7 @@ def interpolate_missing_values(wb, df, debug=False):
         print(daterange[:20])
 
     # range for all values in sheet Data
-    range = wb.sheets['Data'].range('A1').expand()
+    range = GAR.wb.sheets['Data'].range('A1').expand()
     # For each column fill missing values but not latest missing values
 
     for icol, col in enumerate(_df.columns):
@@ -439,7 +442,7 @@ def interpolate_missing_values(wb, df, debug=False):
         
         # We don't want the initial missing values, only values missing in between.
         # Use the first_valid_index to restrict the range
-        first_index = s.first_valid_index()
+        first_index = s.first_valid_index() #找出第一個可以的
 
         # Get all values that have nan as the difference
         # between the original and the interpolated copy
@@ -453,7 +456,7 @@ def interpolate_missing_values(wb, df, debug=False):
         # Use the index and col name to fill the Excel sheet with the interpolated values
         for ind in filled.index:
             # Get the index location
-            irow = _df.index.get_loc(ind)
+            irow = _df.index.get_loc(ind) # pd.index的重要語法
 
             # Get the cell corresponding to the value we want to fill.
             # Note that depending on whether the date is a column or not, we need to add 1 to the column number,
@@ -498,7 +501,7 @@ def ffill_values(wb, df, method='ffill', limit=None, debug=False):
 
     # Since df has dates before dict_input_partition['sdate'] sliced off,
     # we need an offset for the row number
-    daterange = wb.sheets['Data'].range('A1').expand('down').value # this is a list
+    daterange = GAR.wb.sheets['Data'].range('A1').expand('down').value # this is a list
     # Find the index where _df.index[0] is
     try:
         offset = daterange.index(_df.index[0])
@@ -515,7 +518,7 @@ def ffill_values(wb, df, method='ffill', limit=None, debug=False):
         print(daterange[:20])
         
     # range for all values in sheet Data
-    range = wb.sheets['Data'].range('A1').expand()
+    range = GAR.wb.sheets['Data'].range('A1').expand()
     # For each column fill missing values but not latest missing values
     for icol, col in enumerate(_df):
         s  = df[col] # original
@@ -582,7 +585,7 @@ def ffill_values(wb, df, method='ffill', limit=None, debug=False):
             # 3 is red
             # 4 is green
             # 5 is blue
-            # 6 is yellow
+            # 6 is yellow 
             # 7 is magenta
             cell.api.Font.ColorIndex = 3
             # end of loop over index in filled
@@ -633,12 +636,12 @@ def run_partition(dict_input_partition, dict_groups, df_partition, debug=False):
         print('df_partition:')
         print(df_partition)
 
-    warnings.filterwarnings("ignore")
+    #warnings.filterwarnings("ignore")
 
     # ------------------------
     # Create DataFrame for log
     # ------------------------
-    log_frame=pd.DataFrame(columns=['Time','Action'])
+    log_frame=pd.DataFrame(columns=['Time','Action']) # empty action
 
     # ------------------------
     # Create output dict
@@ -650,7 +653,7 @@ def run_partition(dict_input_partition, dict_groups, df_partition, debug=False):
     # from dict_input_partition
     # ------------------------
     for key in dict_input_partition:
-        if key.find('sheet_') != -1:
+        if key.find('sheet_') != -1: # 若存在則為1
             dict_output_partition[key] = dict_input_partition[key]
             #print(key, dict_output_partition[key] , dict_input_partition[key])
 
@@ -723,18 +726,18 @@ def postrun_partition(dict_output_partition, debug=False):
         sheetname = dict_output_partition[sheetvar]
 
         # Get existing sheetnames
-        sheetnames = [sheet.name for sheet in wb.sheets]
+        sheetnames = [sheet.name for sheet in GAR.wb.sheets]
 
         try:
             # Clear the sheet if it already exists
             if sheetname in sheetnames:
-                wb.sheets[sheetname].clear()
+                GAR.wb.sheets[sheetname].clear()
                 action = 'Cleared sheet ' + sheetname
             # Otherwise add it after the "Data" sheet
             else:
-                wb.sheets.add(sheetname, after='Data')
+                GAR.wb.sheets.add(sheetname, after='Data')
                 # Set output sheet colors to blue
-                wb.sheets[sheetname].api.Tab.ColorIndex = 23
+                GAR.wb.sheets[sheetname].api.Tab.ColorIndex = 23
                 action = 'Created sheet ' + sheetname
         except:
             action = 'Unable to access sheet ' + sheetname
@@ -749,26 +752,26 @@ def postrun_partition(dict_output_partition, debug=False):
     # Write out partition and loadings
     try:
         sheetname = dict_output_partition['sheet_partitions']
-        wb.sheets[sheetname].range('A1').options(index=False).value = dict_output_partition['frame']
-        wb.sheets[sheetname].autofit()
+        GAR.wb.sheets[sheetname].range('A1').options(index=False).value = dict_output_partition['frame']
+        GAR.wb.sheets[sheetname].autofit()
         sheetname = dict_output_partition['sheet_loadings']
-        wb.sheets[sheetname].range('A1').options(index=False).value = dict_output_partition['loading']
-        wb.sheets[sheetname].autofit()
+        GAR.wb.sheets[sheetname].range('A1').options(index=False).value = dict_output_partition['loading']
+        GAR.wb.sheets[sheetname].autofit()
         action='Partitions and loadings saved succesfully.'
     except:
         action='Unable to output partitions and loadings.'
     
     sheetname = dict_output_partition['sheet_partitions']
     
-    for p in wb.sheets[sheetname].shapes:
+    for p in GAR.wb.sheets[sheetname].shapes:
         try: 
             p.delete()
         except Exception as e: 
             print(e)
-    sheet = wb.sheets[sheetname]
+    sheet = GAR.wb.sheets[sheetname]
     if dict_output_partition['method']=='PLS':
         for i,fig in enumerate(dict_output_partition['figs']):
-            fullpath = os.path.abspath(os.path.dirname(wb.fullname) + '/figures')
+            fullpath = os.path.abspath(os.path.dirname(GAR.wb.fullname) + '/figures')
             if not os.path.isdir(fullpath):
                 os.makedirs(fullpath)
             group=dict_output_partition['groups'][i]
@@ -787,7 +790,7 @@ def postrun_partition(dict_output_partition, debug=False):
         fig = dict_output_partition['figs'][0]
         # Set the path of the output file to be in the same dir as the
         # calling Excel file
-        fullpath = os.path.abspath(os.path.dirname(wb.fullname) + '/figures')
+        fullpath = os.path.abspath(os.path.dirname(GAR.wb.fullname) + '/figures')
         if not os.path.isdir(fullpath):
             os.makedirs(fullpath)
         outfilename = fullpath+'\\partition_'+date.now().strftime('%Y_%m-%d@%H_%M-%S')+'.png'
@@ -820,4 +823,4 @@ def postrun_partition(dict_output_partition, debug=False):
             action = 'Unable to add figure to sheet ' + sheetname
     
     # Write out log_frame
-    add_logsheet(wb, log_frame, colnum=1)
+    add_logsheet(GAR.wb, log_frame, colnum=1)

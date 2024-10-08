@@ -10,8 +10,7 @@ import win32api # used in show_message
 import win32con
 import sys
 import pandas as pd
-
-from GAR import wb
+import GAR
 
 def show_message(message, output_console=False, output_messagebox=True, halt=False, msgtype='error'):
     '''
@@ -32,13 +31,13 @@ def show_message(message, output_console=False, output_messagebox=True, halt=Fal
     # Show popup in Excel
     if output_messagebox:
         if msgtype=='error':
-            win32api.MessageBox(wb.app.hwnd, message,'Error',win32con.MB_ICONERROR)
+            win32api.MessageBox(GAR.wb.app.hwnd, message,'Error',win32con.MB_ICONERROR)
         elif msgtype=='info':
-            win32api.MessageBox(wb.app.hwnd, message,'Info',win32con.MB_ICONINFORMATION)
+            win32api.MessageBox(GAR.wb.app.hwnd, message,'Info',win32con.MB_ICONINFORMATION)
         elif msgtype=='warning':
-            win32api.MessageBox(wb.app.hwnd, message,'Warning',win32con.MB_ICONWARNING)
+            win32api.MessageBox(GAR.wb.app.hwnd, message,'Warning',win32con.MB_ICONWARNING)
         else:
-            win32api.MessageBox(wb.app.hwnd, message,'Info',win32con.MB_ICONINFORMATION)
+            win32api.MessageBox(GAR.wb.app.hwnd, message,'Info',win32con.MB_ICONINFORMATION)
                         
     # Print message to console
     if output_console:
@@ -68,12 +67,12 @@ def read_parameters_global():
     This is read in by each operation so is included here.
     '''
 
-    # Use the dict_global_params defined above this function
+    # Use the dict_global_params defined above this function, In this script #51 ~ #56
     global dict_global_params
 
     # There should not be too many global parameters
     for cellpos, varname in [('B11', 'target'), ('B12', 'horizon')]:
-        val = wb.sheets['Input_parameters'].range(cellpos).value
+        val = GAR.wb.sheets['Input_parameters'].range(cellpos).value
 
         # For horizon make sure that it is an int.
         # Since Excel numbers are read in as floats, convert to int
@@ -123,7 +122,7 @@ def read_partition_groupsPLS():
     '''
 
     # Get the sheets in the wb
-    sheetnames = [sheet.name for sheet in wb.sheets]
+    sheetnames = [sheet.name for sheet in GAR.wb.sheets]
     sheetname = 'Partition_groups'
     # Make sure that Partition_groups sheet exists
     if sheetname not in sheetnames:
@@ -131,7 +130,7 @@ def read_partition_groupsPLS():
         show_message(message, halt=True)
 
     # Read in the contents
-    df_groups = wb.sheets[sheetname].range('B1:B29').options(pd.DataFrame,expand='right').value
+    df_groups = GAR.wb.sheets[sheetname].range('B1:B29').options(pd.DataFrame,expand='right').value
     # Create dict for output
     dict_groups = dict()
     
@@ -151,7 +150,7 @@ def read_partition_groupsPLS():
         message = 'Sheet named ' + sheetname + ' does not exist'
         show_message(message, halt=True)
     
-    df_PLS = wb.sheets[sheetname].range('B1:B29').options(pd.DataFrame,expand='right').value
+    df_PLS = GAR.wb.sheets[sheetname].range('B1:B29').options(pd.DataFrame,expand='right').value
     # Create dict for output
     dict_PLS = dict()
 
@@ -180,7 +179,7 @@ def read_partition_groups():
     '''
 
     # Get the sheets in the wb
-    sheetnames = [sheet.name for sheet in wb.sheets]
+    sheetnames = [sheet.name for sheet in GAR.wb.sheets]
     sheetname = 'Partition_groups'
     # Make sure that Partition_groups sheet exists
     if sheetname not in sheetnames:
@@ -188,7 +187,7 @@ def read_partition_groups():
         show_message(message, halt=True)
 
     # Read in the contents
-    df_groups = wb.sheets[sheetname].range('B1:B29').options(pd.DataFrame,expand='right').value
+    df_groups = GAR.wb.sheets[sheetname].range('B1:B29').options(pd.DataFrame,expand='right').value
     # Create dict for output
     dict_groups = dict()
     
@@ -211,17 +210,17 @@ def add_logsheet(wb, log_frame, colnum=1, logsheetname = 'Processing_log'):
     '''
 
     # Get sheets in wb
-    sheetnames = [sheet.name for sheet in wb.sheets]
+    sheetnames = [sheet.name for sheet in GAR.wb.sheets]
     
     try:
         # Clear the sheet for colnum to colnum+2 if it already exists
         if logsheetname in sheetnames:
-            wb.sheets[logsheetname].range((1,colnum), (1,colnum+2)).expand('down').clear()
+            GAR.wb.sheets[logsheetname].range((1,colnum), (1,colnum+2)).expand('down').clear()
             action = 'Cleared contents of ' + logsheetname + ' starting at cols ' + str(colnum)
         # Otherwise add it
         else:
-            wb.sheets.add(logsheetname, after="Input_parameters")
-            wb.sheets[logsheetname].api.Tab.Colorindex = 38 # pinkish color
+            GAR.wb.sheets.add(logsheetname, after="Input_parameters")
+            GAR.wb.sheets[logsheetname].api.Tab.Colorindex = 38 # pinkish color
             action = 'Created sheet ' + logsheetname
     except:
         action = 'Unable to access sheet ' + logsheetname
@@ -229,5 +228,5 @@ def add_logsheet(wb, log_frame, colnum=1, logsheetname = 'Processing_log'):
     # Add to log
     tn=datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     #log = pd.Series({'Time': tn, 'Action': action})
-    wb.sheets[logsheetname].range((1,colnum)).options(index=False).value = log_frame
-    wb.sheets[logsheetname].autofit('c')
+    GAR.wb.sheets[logsheetname].range((1,colnum)).options(index=False).value = log_frame
+    GAR.wb.sheets[logsheetname].autofit('c')

@@ -17,9 +17,6 @@ import numpy as np
 from .partition import Partition
 from datetime import datetime as date                 ## Dates
 
-## Suppress warnings
-import warnings
-warnings.filterwarnings("ignore")
 
 
 ###############################################################################
@@ -34,8 +31,8 @@ def add_id(df, id_dict):
 
 def p_cutoff(dall,groups_dict,cutoff,bench,method, benchcutoff, PLStarget, saveim=False):
 
-
-    df = dall.loc[dall.date >= cutoff].copy()
+    bool_cutoff = dall.date >= cutoff[1]
+    df = dall.loc[bool_cutoff].copy()
     
     #print(df)
     partition_dict = groups_dict

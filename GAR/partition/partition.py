@@ -103,7 +103,7 @@ class Partition(object):
         # By default, using the original data (can be customized)
         self.partition = zscore(self.partition_data(self.data)) 
 
-    ## Methods
+    ## Methods, PCA component analysis
     def __partition_fit_PCA(self):
         """ Run the data partitioning using Principal Component Analysis """
         groups = sorted(list(self.var_dict.keys()))

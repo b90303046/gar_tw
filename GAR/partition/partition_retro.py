@@ -41,7 +41,8 @@ def zscore(series):
 ###############################################################################
 def partition_retro(**kwargs):
 
-    #dall="NA",groups_dict={},tdep="NA",bench='NA',rgdp='NA', horizon=4, method='LDA',sdate=date(1,1,1),edate=date(9999,12,30), benchcutoff=0.30, saveim=False):
+    #dall="NA",groups_dict={},tdep="NA",bench='NA',rgdp='NA', horizon=4, 
+    # method='LDA',sdate=date(1,1,1),edate=date(9999,12,30), benchcutoff=0.30, saveim=False):
     if 'dall' in kwargs:
         dall=kwargs['dall']
     else:
@@ -119,12 +120,17 @@ def partition_retro(**kwargs):
 ## Calculating the growth
     dall['dummygrp']=1    
     if method_growth=='cpd':
-        dall.loc[:,tdep] = dall.groupby(['dummygrp'])[rgdp].apply(cum_gr,horizon=horizon)
+        yy = dall.groupby(['dummygrp'])[rgdp].apply(cum_gr,horizon=horizon)
+        yy.name = tdep
+        dall = pd.merge(left=dall, right=yy, how='left', left_index=True, right_index=True)
     elif method_growth=='yoy':
-        dall.loc[:,tdep] = dall.groupby(['dummygrp'])[rgdp].apply(yoy_gr,horizon=horizon)
+        yy = dall.groupby(['dummygrp'])[rgdp].apply(yoy_gr,horizon=horizon)
+        yy.name = tdep
+        dall = pd.merge(left=dall, right=yy, how='left', left_index=True, right_index=True) 
         if horizon<4:
             dall = dall.iloc[4-horizon-1:]
             sdate=dall.index.values[0]
+
     elif method_growth=='level':
         dall.loc[:,tdep] = dall.groupby(['dummygrp'])[rgdp].shift(-horizon)
     else:

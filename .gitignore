@@ -1,2 +1,4 @@
 *.xlsm
 Documentation
+GAR/__pycache__/
+GAR/partition/__pycache__/

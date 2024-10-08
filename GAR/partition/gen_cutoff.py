@@ -18,9 +18,7 @@ from GAR.partition import partition
 from datetime import datetime as date                 ## Dates
 from dateutil.relativedelta import relativedelta      ## Dates computations
 
-## Suppress warnings
-import warnings
-warnings.filterwarnings("ignore")
+ 
 
 
 ## Function to generate partition cutoff points and completed groups

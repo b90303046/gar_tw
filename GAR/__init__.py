@@ -15,7 +15,7 @@ __version__ = "0.1.1"
 
 import os
 import sys
-import imp
+import importlib
 
 import xlwings as xw
 
@@ -38,14 +38,14 @@ except:
     print('-' * 50)
 
 from GAR.partition.partition_main import do_partition
-from GAR.quantfit.quantfit_main import do_quantfit
-from GAR.tsfit.tsfit_main import do_tsfit
-from GAR.scenario.scenariomain import do_scenario
-from GAR.historical.historicalmain import do_historical
-from GAR.segment.segmentmain import do_segment
-from GAR import historical
-from GAR import scenario
-from GAR import segment
+# from GAR.quantfit.quantfit_main import do_quantfit
+# from GAR.tsfit.tsfit_main import do_tsfit
+# from GAR.scenario.scenariomain import do_scenario
+# from GAR.historical.historicalmain import do_historical
+# from GAR.segment.segmentmain import do_segment
+# from GAR import historical
+# from GAR import scenario
+# from GAR import segment
 def set_mock_caller_file(xlfilename='GaR.xlsm'):
     '''
     Function to set up mock caller for xlwings.
@@ -57,7 +57,7 @@ def set_mock_caller_file(xlfilename='GaR.xlsm'):
 
     # Set the wb set in this function to be global
     # so it overwrites the wb throughout this file.
-    global wb
+    global wb  # 之後呼叫的檔案都叫做GAR.wb
 
     # Get the full path of the specified file
     xlfullpath = os.path.abspath(xlfilename)
@@ -71,22 +71,22 @@ def set_mock_caller_file(xlfilename='GaR.xlsm'):
 
     # Once this is called we need to re-import the functions,
     # otherwise the variable wb imported is still the previous value
-    imp.reload(globals)
+    #importlib.reload(globals)
     
-    imp.reload(partition.partition_main)
-    from GAR.partition.partition_main import do_partition
-    
-    imp.reload(quantfit.quantfit_main)
-    from GAR.quantfit.quantfit_main import do_quantfit
+    # imp.reload(partition.partition_main)
+    # from GAR.partition.partition_main import do_partition
+    test = do_partition(True)
+    # imp.reload(quantfit.quantfit_main)
+    # from GAR.quantfit.quantfit_main import do_quantfit
 
-    imp.reload(tsfit.tsfit_main)
-    from GAR.tsfit.tsfit_main import do_tsfit  
+    # imp.reload(tsfit.tsfit_main)
+    # from GAR.tsfit.tsfit_main import do_tsfit  
         
-    imp.reload(scenario.scenariomain)
-    from GAR.scenario.scenariomain import do_scenario
+    # imp.reload(scenario.scenariomain)
+    # from GAR.scenario.scenariomain import do_scenario
 
-    imp.reload(historical.historicalmain)
-    from GAR.historical.historicalmain import do_historical
+    # imp.reload(historical.historicalmain)
+    # from GAR.historical.historicalmain import do_historical
     
-    imp.reload(segment.segmentmain)
-    from GAR.segment.segmentmain import do_segment
+    # imp.reload(segment.segmentmain)
+    # from GAR.segment.segmentmain import do_segment

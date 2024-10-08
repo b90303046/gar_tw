@@ -2,12 +2,13 @@
 """
 Created on Mon Jun 15 15:32:04 2018
 Annualized compound GDP Growth calculation
-@author: cwang2
+Original author: cwang2, 
+modified by HsinJung Yu
 """
 
 def cum_gr(series, horizon ,yearfreq=4): 
-    ## Compute the compound annualized quarterly growth rate over a certain horizon
-    cagr = ((series.shift(-horizon)/series)**(1/horizon))-1
+    ## Compute the compound annualized quarterly growth rate over a certain horizon % qoq 年化成長率
+    cagr = ((series.shift(-horizon)/series)**(1/horizon))-1 # 1: Series 往下移(首項放NaN) ,  -1: Series 往上移()
     ## Need to annualize it now
     annual_cagr = ((1+cagr)**yearfreq) -1
     return(100*annual_cagr)
