@@ -28,7 +28,4 @@ This package contains the GaR excel tool developed at the International Monetary
 
 # Contact
 
-IMF-GaR@imf.org
-Romain Lafarguette, rlafarguette@imf.org
-Changchun Wang, cwang2@imf.org
-Kei Moriya, KMoriya@imf.org
+HsinJung Yu, (hjyu@mail.cbc.gov.tw)
