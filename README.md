@@ -1,15 +1,12 @@
-<p align="left">
-  <img src="EN-logo_large_blue.png" width="150" title="IMF logo">
-</p>
-
-# Growth at Risk
+# Growth at Risk (Not Complete Yet !!!)
 
 # Disclaimer
 
 Reuse of this tool and IMF data does not imply any endorsement of the research and/or product. Any research presented should not be reported as representing the views of the IMF, its Executive Board, or member governments.
 
-# Version 
 
+# Version 
+Please see <a href='https://github.com/IMFGAR/GaR'> the link </a>
 28 October 2019
 
 # Usage
